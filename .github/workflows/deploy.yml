@@ -25,6 +25,7 @@ jobs:
         id: cypress-tests
         run: |
           npx cypress run --headless
+          echo "::set-output name=test-result::${{ job.status }}"
 
       - name: Deploy to Vercel
         if: ${{ steps.cypress-tests.outcome == 'success' }}
