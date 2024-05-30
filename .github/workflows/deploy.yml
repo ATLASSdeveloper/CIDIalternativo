@@ -1,0 +1,39 @@
+name: Deploy to Vercel if Tests Pass
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16' # Cambia esto a la versión 16 de Node.js
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests with Cypress
+        id: cypress-tests
+        run: |
+          npx cypress run --headless
+
+      - name: Deploy to Vercel
+        if: ${{ steps.cypress-tests.outcome == 'success' }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
+        run: |
+          npm install -g vercel
+          vercel --prod --token $VERCEL_TOKEN
+          
+          # Después de desplegar, activa el Deploy Hook en Vercel usando una solicitud HTTP POST
+          curl -X POST $DEPLOY_HOOK_URL
